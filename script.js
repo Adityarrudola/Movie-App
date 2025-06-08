@@ -3,25 +3,34 @@ const movieContainer = document.querySelector('.movie-container');
 const inputBox = document.querySelector('.input-box');
 
 const getMovieInfo = async (movie) =>{
-    const myapikey = "966c4f4f";
-    const url = `http://www.omdbapi.com/?apikey=${myapikey}&t=${movie}`;
+    try {
+        const myapikey = "966c4f4f";
+        const url = `https://www.omdbapi.com/?apikey=${myapikey}&t=${movie}`;
+    
+        const response = await fetch(url);
+        if(!response.ok){
+            throw new error("Unable to fetch movie data");   
+        }
+        const data = await response.json();
+        showMovieData(data);
+    } catch (error) {
+        showErrorMessage("No movie found");
+    }
 
-    const response = await fetch(url);
-    const data = await response.json();
-    showMovieData(data);
 }
 
 const showMovieData = (data) => {
     movieContainer.innerHTML = "";
+    movieContainer.classList.remove("no-background");
     const {Title, imdbRating, Genre, Released, Runtime, Actors, Plot, Poster} = data;
 
     const movieElement = document.createElement('div');
-     movieElement.classList.add('.movie-info');
+    movieElement.classList.add('movie-info');
     movieElement.innerHTML = `<h2>${Title}</h2>
                               <p><strong>Rating: &#11088</strong>${imdbRating}</p>`;
 
     const movieGenreElement = document.createElement('div');
-    movieGenreElement.classList.add('.movies-genre');
+    movieGenreElement.classList.add('movies-genre');
     Genre.split(",").forEach(element => {
         const p = document.createElement('p');
         p.innerText = element;
@@ -45,10 +54,21 @@ const showMovieData = (data) => {
     movieContainer.appendChild(movieElement);
 }
 
-searchForm.addEventListener('submit',(e)=>{
+const showErrorMessage = (message) =>{
+    movieContainer.classList.add("no-background");
+    movieContainer.innerHTML = `<h2>${message}</h2>`;
+}
+
+const handleFormSubmission = (e) => {
     e.preventDefault();
     const movieName = inputBox.value.trim();
     if(movieName !== ''){
+        showErrorMessage("Fetching movie information");
         getMovieInfo(movieName);
+    }else{ 
+        showErrorMessage("Enter a movie name");
+        movieContainer.classList.add("no-background");
     }
-});
+}
+
+searchForm.addEventListener('submit',handleFormSubmission);
